@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.bbshop.bit.cart.domain.Cart_PDVO;
+import com.bbshop.bit.cart.domain.Cart_GDVO;
 import com.bbshop.bit.cart.domain.GoodsVO;
 import com.bbshop.bit.cart.service.CartService;
 
@@ -24,7 +24,7 @@ import com.bbshop.bit.cart.service.CartService;
 @RequestMapping("*.do")
 public class CartController {
 	
-	List<Cart_PDVO> cartList ;
+	List<Cart_GDVO> cartList ;
 	List<GoodsVO> goodsList;
 	
 	@Autowired(required=true)
@@ -36,7 +36,7 @@ public class CartController {
 		int allPrice=0;
 		int shipping_fee=0;
 		long user_key = 1;
-		Cart_PDVO vo = new Cart_PDVO();
+		Cart_GDVO vo = new Cart_GDVO();
 		vo.setUSER_KEY(user_key);
 		
 		cartList = cartService.getCartList(user_key);
@@ -44,7 +44,7 @@ public class CartController {
 		
 		for (int i = 0; i < cartList.size(); i++) {
 			long goodsnum = cartList.get(i).getGOODS_NUM();
-			Cart_PDVO temp = cartList.get(i);
+			Cart_GDVO temp = cartList.get(i);
 			temp.setTOTALPRICE(temp.getPRICE()*temp.getQNTTY());
 			cartList.set(i, temp);
 			int price = cartList.get(i).getPRICE();
@@ -75,7 +75,7 @@ public class CartController {
 	@ResponseBody
 	@RequestMapping(value="QnttyUp.do" , method=RequestMethod.GET)
 	public String qnttyUp(@RequestParam("QNTTY") int qnt, @RequestParam("index") int index,Model model) {
-		Cart_PDVO temp =cartList.get(index);
+		Cart_GDVO temp =cartList.get(index);
 		int allPrice=0;
 		int shipping_fee=0;
 		
@@ -100,7 +100,7 @@ public class CartController {
 	@ResponseBody
 	@RequestMapping(value="QnttyDown.do" , method=RequestMethod.GET)
 	public String qnttyDown(@RequestParam("QNTTY") int qnt, @RequestParam("index") int index ,Model model) {
-		Cart_PDVO temp =cartList.get(index);
+		Cart_GDVO temp =cartList.get(index);
 		int allPrice=0;
 		int shipping_fee=0;
 

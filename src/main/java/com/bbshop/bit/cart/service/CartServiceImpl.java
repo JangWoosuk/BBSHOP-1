@@ -7,7 +7,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.bbshop.bit.cart.domain.Cart_PDVO;
+import com.bbshop.bit.cart.domain.Cart_GDVO;
 import com.bbshop.bit.cart.domain.GoodsVO;
 import com.bbshop.bit.cart.mapper.CartMapper;
 
@@ -18,12 +18,12 @@ public class CartServiceImpl implements CartService {
 	private SqlSession sqlSession;
 	
 	@Override
-	public List<Cart_PDVO> getCartList(long user_key) {
+	public List<Cart_GDVO> getCartList(long user_key) {
 		
 		System.out.println("유저키가 여기까지 들어오는가?"+user_key);
 		CartMapper mapper = sqlSession.getMapper(CartMapper.class);
 		sqlSession.getMapper(CartMapper.class);
-		List<Cart_PDVO> cartList = mapper.getCartList(user_key);
+		List<Cart_GDVO> cartList = mapper.getCartList(user_key);
 		
 		System.out.println(cartList);
 		
@@ -45,7 +45,7 @@ public class CartServiceImpl implements CartService {
 	}
 	
 	@Override
-	public void modify(Cart_PDVO qnt) {
+	public void modify(Cart_GDVO qnt) {
 		CartMapper mapper = sqlSession.getMapper(CartMapper.class);
 		sqlSession.getMapper(CartMapper.class);
 		mapper.modify(qnt);

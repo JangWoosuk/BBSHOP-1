@@ -6,11 +6,11 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %> 
 <%
-List<GoodsVO> goodsList= (List<GoodsVO>)request.getAttribute("goodsList");
-List<Cart_PDVO> cartList= (List<Cart_PDVO>)request.getAttribute("cartList");
-int allPrice = (int)request.getAttribute("allPrice");
-int shipping_fee = (int)request.getAttribute("shipping_fee");
-%>
+ 	List<GoodsVO> goodsList= (List<GoodsVO>)request.getAttribute("goodsList");
+ List<Cart_GDVO> cartList= (List<Cart_GDVO>)request.getAttribute("cartList");
+ int allPrice = (int)request.getAttribute("allPrice");
+ int shipping_fee = (int)request.getAttribute("shipping_fee");
+ %>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
 
 <style>

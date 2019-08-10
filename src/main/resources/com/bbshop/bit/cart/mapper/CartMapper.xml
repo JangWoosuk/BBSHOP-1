@@ -4,7 +4,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-ma
 
 <mapper namespace ="com.bbshop.bit.cart.mapper.CartMapper">
 
- <resultMap type="com.bbshop.bit.cart.domain.Cart_PDVO" id="CartResultMap">
+ <resultMap type="com.bbshop.bit.cart.domain.Cart_GDVO" id="CartResultMap">
 	<result property ="GOODS_NUM" column ="GOODS_NUM"/>
 	<result property ="PRICE" column ="PRICE"/>
 	<result property ="QNTTY" column ="QNTTY"/>
@@ -36,7 +36,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-ma
 
 </select>
 
-<update id="modify" parameterType="com.bbshop.bit.cart.domain.Cart_PDVO">
+<update id="modify" parameterType="com.bbshop.bit.cart.domain.Cart_GDVO">
 	update cart_gd
 	set QNTTY =${QNTTY} ,PRICE=${PRICE}
 	where gd_ct_key=${GD_CT_KEY}
