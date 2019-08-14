@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbshop.bit.mapper.GoodsMapper">
+
+	<!-- 검색 기준을 <sql>에 묶음 -->
+	<sql id="criteria">
+		<choose>
+			<when test="sorting == 'new'">
+				SELECT /*+INDEX_DESC(goods idx_goods_date) */
+			</when>
+			<when test="sorting == 'best'">
+				SELECT /*+INDEX_DESC(goods idx_goods_best) */
+			</when>
+			<when test="sorting == 'lowPrice'">
+				SELECT /*+INDEX_ASC(goods idx_goods_price) */
+			</when>
+			<when test="sorting == 'highPrice'">
+				SELECT /*+INDEX_DESC(goods idx_goods_price) */
+			</when>
+		</choose>
+		rownum rn, g.goods_num, g.category, g.name, g.main_img, g.price, g.best,
+		g.regdate, gg.position, gg.hand, g.brand
+		FROM goods g, gd_glove gg
+		WHERE g.goods_num = gg.goods_num
+		<if test="pagingVO.type != null and !pagingVO.type.equals('')">
+			AND name like '%'||#{pagingVO.keyword}||'%'
+		</if>
+		<if test='positions != null and positions.size != 0'>
+			AND position IN
+			<foreach item="val" index="index" collection="positions"
+				open="(" separator="," close=")">
+				#{val}
+			</foreach>
+		</if>
+		<if test='colors != null and colors.size != 0'>
+			AND color IN
+			<foreach item="val" index="index" collection="colors" open="("
+				separator="," close=")">
+				#{val}
+			</foreach>
+		</if>
+		<if test='brands != null and brands.size != 0'>
+			AND brand IN
+			<foreach item="val" index="index" collection="brands"
+				open="(" separator="," close=")">
+				#{val}
+			</foreach>
+		</if>
+<![CDATA[
+			AND rownum <= #{pagingVO.pageNum, jdbcType=INTEGER} * #{pagingVO.amount, jdbcType=INTEGER} 
+]]>
+			AND category = #{category, jdbcType=INTEGER}
+<![CDATA[	AND price > #{min_amount, jdbcType=INTEGER}	
+			AND price < #{max_amount, jdbcType=INTEGER}	
+]]>
+			<!-- DISTINCT는 GOODS_NUM만 적용할 수 없으므로 길들이기와 좌/우가 0인 것을 기본값으로 들고 오도록 지정해준다. -->
+			AND hand = 0
+			AND taming = 0
+		<choose>
+			<when test="sorting == 'new'">
+<![CDATA[	and regdate > '18/01/01'	]]>
+			</when>
+			<when test="sorting == 'best'">
+<![CDATA[	AND best >= 0	]]>
+			</when>
+		</choose>
+	</sql>
+
+<!-- 페이징 O -->
+<!-- 상품 목록, sorting값에 따라 동적쿼리 -->
+<!-- 전달받은 hashmap[pagingVO(pageNum,amount), category, sorting] -->
+<select id="getGoodsList" parameterType="hashmap" resultType="com.bbshop.bit.domain.GoodsVO">
+	SELECT goods_num, category, name, main_img, price, best, regdate
+	FROM 
+		(
+			<include refid="criteria"></include>
+		)
+<![CDATA[
+	WHERE rn > (#{pagingVO.pageNum, jdbcType=INTEGER}-1) * #{pagingVO.amount, jdbcType=INTEGER}
+]]>	
+</select>
+
+<!-- 카테고리 별, goods 데이터 개수 */ -->
+<select id="getTotalCount" resultType="int">
+	SELECT count(*) 
+	FROM goods 
+	WHERE category = #{category, jdbcType=INTEGER}
+</select>
+
+<!-- ajax로 데이터 불러올 때 전체 개수 구하기  -->
+<select id="getTotalCountAjax" parameterType="hashmap" resultType="int">
+	SELECT count(*)
+	FROM
+		(
+			<include refid="criteria"></include>
+		)
+<![CDATA[
+	WHERE rn > (#{pagingVO.pageNum, jdbcType=INTEGER}-1) * #{pagingVO.amount, jdbcType=INTEGER}
+]]>			
+</select>
+
+<!-- 상품 조회 -->
+<select id="getGoodsInfo" resultType="com.bbshop.bit.domain.GoodsVO">
+	select * from goods where goods_num = #{goods_num}
+</select>
+
+
+
+<!--===================================================================================-->
+
+
+
+<!-- 상품 QNA 등록 - insert문이 실행되고 생성된  pk(시퀀스) 값을 알아야 하는 경우 -->
+<insert id="insertGoodsQnaSelectKey">
+	
+	<selectKey keyProperty="qna_num" order="BEFORE" resultType="long">
+		select seq_qna.nextval from dual
+	</selectKey>
+
+	insert into qna
+	values(#{qna_num}, #{title}, #{content}, #{attached_file}, sysdate, #{goods_num}, #{user_key}, #{qna_num}, 0, 0)
+</insert>
+
+
+<!-- 상품 QNA 목록 (goods_num이 상품 카테고리) -->
+<!-- hashmap[pagingVO(pageNum, amount), goods_num] -->
+<select id="getQnaList" parameterType="hashmap" resultType="com.bbshop.bit.domain.GoodsQnaVO">
+	select *
+	from (
+		select /*+INDEX(qna idx_qna_list) */
+			rownum rn, qna.*
+		from QNA
+<![CDATA[
+		where rownum <= #{pagingVO.pageNum, jdbcType=INTEGER} * #{pagingVO.amount, jdbcType=INTEGER} 
+]]>	
+			and goods_num = #{goods_num, jdbcType=INTEGER}
+<![CDATA[	
+			and re_ref > 0
+	)
+	where rn > (#{pagingVO.pageNum, jdbcType=INTEGER}-1) * #{pagingVO.amount, jdbcType=INTEGER}
+]]>	
+</select>
+
+
+<!-- 상품 별, QNA 글 개수 -->
+<select id="getQnaCount" resultType="int">
+	SELECT COUNT(*)
+	FROM QNA
+	WHERE GOODS_NUM = #{goods_num}
+</select>
+
+
+<!--===================================================================================-->
+
+
+<!-- 상품 REVIEW 등록  -->
+<insert id="insertReview">
+	insert into review (rv_num, title, contents, score, re_img, re_date, re_chk, goods_num, user_key)
+	values(seq_review.nextval, #{title}, #{contents}, #{score}, #{re_img}, sysdate, 1, #{goods_num}, #{user_key})
+</insert>
+
+
+<!-- 상품  REVIEW 목록 (goods_num이 상품 카테고리) -->
+<!-- hashmap[pagingVO(pageNum, amount), goods_num] -->
+<select id="getReviewList" parameterType="hashmap" resultType="com.bbshop.bit.domain.ReviewVO">
+	select *
+	from (
+		select /*+INDEX_DESC(review idx_review_regdate) */
+			rownum rn, review.*
+		from review
+<![CDATA[
+		where rownum <= #{pagingVO.pageNum, jdbcType=INTEGER} * #{pagingVO.amount, jdbcType=INTEGER} 
+]]>	
+			and goods_num = #{goods_num, jdbcType=INTEGER}
+<![CDATA[	
+			and re_date > '19/01/01'
+]]>
+		<if test='score != 0'>
+			and score = #{score}
+		</if>		
+	)
+<![CDATA[
+	where rn > (#{pagingVO.pageNum, jdbcType=INTEGER}-1) * #{pagingVO.amount, jdbcType=INTEGER}
+]]>	
+</select>
+
+
+<!-- 상품 별, REVIEW 글 개수 -->
+<select id="getReviewCount" resultType="int">
+	SELECT COUNT(*)
+	FROM REVIEW
+	WHERE GOODS_NUM = #{goods_num}
+</select>
+
+
+<!-- 상품 별, REVIEW 점수 평균  -->
+<select id="getReviewAvg" resultType="double">
+	SELECT ROUND(AVG(SCORE), 1) AS AVG
+	FROM REVIEW
+	WHERE GOODS_NUM = #{goods_num}
+</select>
+
+
+<!-- 상품 별, 별점 별 REVIEW 글 개수  -->
+<select id="getScoreCount" resultType="int">
+	SELECT COUNT(*)
+	FROM REVIEW
+	WHERE GOODS_NUM = #{goods_num}
+	AND SCORE = #{score}
+</select>
+
+<!--===================================================================================-->
+
+<select id="getNickName" resultType="String">
+	select nickname
+	from sh_user
+	where user_key = #{user_key}
+</select>
+
+
+<!--======================================================================-->
+
+
+
+<!-- user_key를 이용해 moredetails을 가져온다. -->
+<select id="findDetail" resultType="com.bbshop.bit.domain.MoreDetailsVO">
+	select * from u_moredetail where user_key = #{user_key}
+</select>
+
+<!-- 추천 상품 : 회원 -->
+<select id="recommendGoodsList" resultType="com.bbshop.bit.domain.GoodsVO">
+	select distinct a.*
+	from goods a, gd_glove b, gd_uniform c
+	where
+		(a.brand in (#{BRAND1}, #{BRAND2}, #{BRAND3}) and b.position = #{POSITION} and a.goods_num = b.goods_num) 
+		
+		or
+		
+		(a.brand in (#{BRAND1}, #{BRAND2}, #{BRAND3}) and c.team = #{TEAM} and a.goods_num = c.goods_num)
+	order by a.goods_num
+</select>
+
+<!-- 추천 상품 : 회원 -->
+<select id="recommendBestList" resultType="com.bbshop.bit.domain.GoodsVO">
+	select *
+	from ( 
+		select /*+INDEX_DESC(goods idx_goods_best) */
+			rownum rn, goods_num, name, main_img, price, best, regdate
+		from goods
+<![CDATA[		
+	where rownum <= 10 and best >= 0
+	)
+	where rn > 0
+]]>
+</select>
+
+<insert id="addGoodsToCart">
+
+	<selectKey keyProperty="gd_ct_key" order="BEFORE" resultType="long">
+		SELECT seq_cart.nextval FROM dual
+	</selectKey>
+
+	INSERT INTO cart_gd
+	VALUES (#{gd_ct_key}, #{goods.price}, #{qty}, 2000, 0, #{goods.goods_num}, #{user_key}, #{goods_detail_num})
+</insert>
+
+</mapper>

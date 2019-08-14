@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace ="com.bbshop.bit.mapper.CartMapper">
+
+ <resultMap type="com.bbshop.bit.domain.Cart_GDVO" id="CartResultMap">
+	<result property ="GOODS_NUM" column ="GOODS_NUM"/>
+	<result property ="PRICE" column ="PRICE"/>
+	<result property ="QNTTY" column ="QNTTY"/>
+	<result property ="GD_CT_KEY" column ="GD_CT_KEY"/>
+	<result property ="SAVINGS" column ="SAVINGS"/>
+	<result property ="STOCK" column ="STOCK"/>
+	<result property ="GD_DETAILS" column="GD_DETAILS"/>
+	<result property ="USER_KEY" column ="USER_KEY"/>
+</resultMap>
+
+<resultMap type="com.bbshop.bit.domain.GoodsVO" id="GoodsResultMap">
+	<result property = "GOODS_NUM" column ="GOODS_NUM"/>
+	<result property = "CATEGORY" column ="CATEGORY"/>
+	<result property = "NAME" column ="NAME"/>
+	<result property = "DISCOUNT" column="DISCOUNT"/>
+	<result property = "SALES" column="SALES"/>
+	<result property = "MAIN_IMG" column ="MAIN_IMG"/>
+	<result property = "BRAND" column ="BRAND"/>
+</resultMap>
+
+
+<select id = "getCartList" resultMap="CartResultMap">
+	select * from cart_gd where user_key =#{user_key}
+</select>
+
+
+<select id ="getGoods" resultType ="com.bbshop.bit.domain.GoodsVO">
+	select goods_num,category,name,main_img,brand,sales,discount from goods where goods_num =#{goodsnum}
+
+</select>
+
+<update id="modify" parameterType="com.bbshop.bit.domain.Cart_GDVO">
+	update cart_gd
+	set QNTTY =${QNTTY} ,PRICE=${PRICE}
+	where gd_ct_key=${GD_CT_KEY}
+
+</update>
+
+<delete id ="selectDelete" parameterType="hashMap">
+	delete
+	from cart_gd
+	where gd_ct_key IN
+	<foreach collection="deleteListResult" item="delete" open="(" close=")" separator=",">
+	#{delete.value}
+	</foreach> 
+</delete>
+
+<delete id="deleteAll">
+	delete 
+	from cart_gd
+	
+</delete>
+
+</mapper>

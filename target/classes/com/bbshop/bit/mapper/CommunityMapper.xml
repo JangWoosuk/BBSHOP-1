@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bbshop.bit.mapper.CommunityMapper">
+
+	<insert id="insertPost" parameterType="com.bbshop.bit.domain.CommunityVO">
+		<selectKey keyProperty="BOARD_NUM" resultType="int" order="BEFORE">
+			select seq_board.nextval FROM DUAL
+		</selectKey>
+
+		INSERT INTO community
+		VALUES
+			(#{BOARD_NUM}, #{TEAM_NAME}, #{TITLE}, #{BOARD_CONTENT}, #{UPLOADFILE}, #{WRITER}, 0, sysdate, sysdate, 0, 0, #{USER_KEY}, 1, 1, 1 )
+
+	</insert>
+
+	<select id="getNickname" parameterType="int" resultType="String">
+		SELECT nickname
+		FROM sh_user
+		WHERE user_key = #{USER_KEY}
+	</select>
+
+	<select id="getPost" parameterType="long"
+		resultType="com.bbshop.bit.domain.CommunityVO">
+		SELECT team_name, title, board_num, writer, regdate, hit, reply_count, board_content, uploadFile
+		FROM community
+		WHERE board_num = #{BOARD_NUM}
+	</select>
+
+	<select id="getListWithPaging" parameterType="map" resultType="com.bbshop.bit.domain.CommunityVO">
+
+	<![CDATA[
+
+	SELECT rownum rn, board_num, title, board_content,writer,regdate,moddate, hit
+	FROM 
+		(
+			SELECT /*+INDEX(community idx_regdate) */ 
+			rownum rn, board_num, title, board_content, writer, regdate, moddate, hit 
+			FROM community 
+			WHERE team_name= #{teamName} and regdate > '19/01/01' and ]]>
+
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item="type" collection="pagingVO.typeArr">
+
+				<trim prefix="OR">
+					<choose>
+						<when test="type=='T'.toString()">
+							title like '%'||#{pagingVO.keyword}||'%'
+						</when>
+						<when test="type=='C'.toString()">
+							board_content like '%'||#{pagingVO.keyword}||'%'
+						</when>
+						<when test="type=='N'.toString()">
+							writer like '%'||#{pagingVO.keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+
+			<![CDATA[
+			 rownum <= #{pagingVO.pageNum} * #{pagingVO.amount})
+	where rn > (#{pagingVO.pageNum} -1) * #{pagingVO.amount}
+	]]>
+
+	</select>
+
+	<delete id="deletePost" parameterType="long">
+		DELETE FROM community
+		WHERE board_num = #{BOARD_NUM}
+	</delete>
+
+	<select id="getBoardNum" resultType="long">
+		SELECT *
+		FROM (
+			SELECT board_num
+			FROM community
+			WHERE user_key = #{user_key}
+			ORDER BY regdate desc)
+		WHERE ROWNUM = 1
+	</select>
+
+	<update id="updatePost"
+		parameterType="com.bbshop.bit.domain.CommunityVO">
+		UPDATE community
+		SET team_name = #{TEAM_NAME}, title = #{TITLE}, board_content =
+		#{BOARD_CONTENT}, uploadFile = #{UPLOADFILE} , moddate = sysdate
+		WHERE board_num = #{BOARD_NUM, jdbcType=NUMERIC}
+	</update>
+
+
+	<select id="findNextPost" resultType="Long">
+		SELECT MAX(board_num)
+		FROM (
+   		SELECT /*+INDEX(community idx_regdate) */
+    	board_num
+    	FROM community
+    	<![CDATA[
+   		WHERE regdate > '19/01/01' and TEAM_NAME = #{TEAM_NAME}
+		) WHERE board_num < #{BOARD_NUM} ]]>
+	</select>
+	
+	<select id="findPreviousPost" resultType="Long">
+		SELECT MIN(board_num)
+		FROM (
+   		SELECT /*+INDEX(community idx_regdate) */
+    	board_num
+    	FROM community
+    	<![CDATA[
+   		WHERE regdate > '19/01/01' and TEAM_NAME = #{TEAM_NAME}
+		) WHERE board_num > #{BOARD_NUM} ]]>
+	</select>
+	
+	<update id="updateHit">
+		UPDATE community
+		SET hit = hit + 1
+		WHERE board_num = #{BOARD_NUM}
+	</update>
+	
+	<select id="getTotalCount" parameterType="map" resultType="int">
+	select count(*) from community
+	where team_name= #{teamName}
+	</select>
+	
+</mapper>

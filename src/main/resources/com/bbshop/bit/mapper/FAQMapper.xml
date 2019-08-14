@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybats.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbshop.bit.mapper.FAQMapper">
+
+	<sql id="PagingVO">
+	
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+				<foreach item='type' collection="typeArr">
+					<trim prefix="OR">
+						<choose>
+						
+						<when test="type == 'T'.toString()" >
+							SUBJECT like '%'||#{keyword, jdbcType = VARCHAR}||'%'
+						</when>
+						
+						<when test="type == 'C'.toString()">
+							CONTENT like '%'||#{keyword, jdbcType = VARCHAR}||'%'
+						</when>
+						
+						</choose>
+					</trim>
+				</foreach>
+			</trim>
+		</sql>
+
+	<select id="FAQ_getList" resultType="com.bbshop.bit.domain.FAQVO">
+		<![CDATA[
+			select * from SERVICE_FAQ where FAQ_NUM > 0
+		]]>
+	</select>
+
+	<select id="FAQ_read" resultType="com.bbshop.bit.domain.FAQVO">
+		select * from SERVICE_FAQ where FAQ_NUM = #{FAQ_NUM}
+	</select>
+	
+
+	
+	<select id="getListWithPaging" resultType="com.bbshop.bit.domain.FAQVO">
+	
+		<![CDATA[
+			select
+				FAQ_NUM, FAQ_CATEGORY, SUBJECT, CONTENT
+			from
+				(
+				select
+			 		rownum rn, FAQ_NUM, FAQ_CATEGORY, SUBJECT, CONTENT 
+				from SERVICE_FAQ
+				where
+	]]>			
+			
+ 		<include refid="PagingVO"></include>	
+			
+		<![CDATA[
+					rownum <= #{pageNum} * #{amount}
+					ORDER BY FAQ_NUM desc
+				)
+			where rn > (#{pageNum} -1) * #{amount}
+			
+		]]>
+	</select>
+	
+	<select id="cancel" resultType="com.bbshop.bit.domain.FAQVO">
+	
+		<![CDATA[
+			select
+				FAQ_NUM, FAQ_CATEGORY, SUBJECT, CONTENT
+			from(
+				select * from
+                
+				(
+				select
+			 		rownum rn, FAQ_NUM, FAQ_CATEGORY, SUBJECT, CONTENT 
+				from SERVICE_FAQ
+				where
+					FAQ_CATEGORY = '변경/취소' 
+				)
+	]]>				
+			
+ 		<include refid="PagingVO"></include>	
+			
+		<![CDATA[
+					where rownum <= #{pageNum} * #{amount}
+					ORDER BY FAQ_NUM desc
+				)
+			where rn > (#{pageNum} -1) * #{amount}
+			
+		]]>
+	</select>
+	
+		<select id="trade" resultType="com.bbshop.bit.domain.FAQVO">
+	
+		<![CDATA[
+			select
+				FAQ_NUM, FAQ_CATEGORY, SUBJECT, CONTENT
+			from(
+				select * from
+                
+				(
+				select
+			 		rownum rn, FAQ_NUM, FAQ_CATEGORY, SUBJECT, CONTENT 
+				from SERVICE_FAQ
+				where
+					FAQ_CATEGORY = '교환/반품' 
+				)
+	]]>				
+			
+ 		<include refid="PagingVO"></include>	
+			
+		<![CDATA[
+					where rownum <= #{pageNum} * #{amount}
+					ORDER BY FAQ_NUM desc
+				)
+			where rn > (#{pageNum} -1) * #{amount}
+			
+		]]>
+	</select>
+	
+	<select id="order" resultType="com.bbshop.bit.domain.FAQVO">
+	
+		<![CDATA[
+			select
+				FAQ_NUM, FAQ_CATEGORY, SUBJECT, CONTENT
+			from(
+				select * from
+                
+				(
+				select
+			 		rownum rn, FAQ_NUM, FAQ_CATEGORY, SUBJECT, CONTENT 
+				from SERVICE_FAQ
+				where
+					FAQ_CATEGORY = '주문/조회' 
+				)
+	]]>				
+			
+ 		<include refid="PagingVO"></include>	
+			
+		<![CDATA[
+					where rownum <= #{pageNum} * #{amount}
+					ORDER BY FAQ_NUM desc
+				)
+			where rn > (#{pageNum} -1) * #{amount}
+			
+		]]>
+	</select>
+	
+	<select id="question" resultType="com.bbshop.bit.domain.FAQVO">
+	
+		<![CDATA[
+			select
+				FAQ_NUM, FAQ_CATEGORY, SUBJECT, CONTENT
+			from(
+				select * from
+                
+				(
+				select
+			 		rownum rn, FAQ_NUM, FAQ_CATEGORY, SUBJECT, CONTENT 
+				from SERVICE_FAQ
+				where
+					FAQ_CATEGORY = '상품문의' 
+				)
+	]]>				
+			
+ 		<include refid="PagingVO"></include>	
+			
+		<![CDATA[
+					where rownum <= #{pageNum} * #{amount}
+					ORDER BY FAQ_NUM desc
+				)
+			where rn > (#{pageNum} -1) * #{amount}
+			
+		]]>
+	</select>
+	
+	<select id="getTotalCount" resultType="int">
+		select count(*) from SERVICE_FAQ where
+		
+		<include refid="PagingVO"></include>
+		
+		FAQ_NUM > 0
+		
+	</select>
+	
+	
+	<select id="getCancelCount" resultType="int">
+		select count(*) from SERVICE_FAQ where
+		
+		<include refid="PagingVO"></include>
+		
+		FAQ_NUM > 0 and  faq_category = '변경/취소'
+		
+	</select>
+	
+	<select id="getTradeCount" resultType="int">
+		select count(*) from SERVICE_FAQ where
+		
+		<include refid="PagingVO"></include>
+		
+		FAQ_NUM > 0 and  faq_category = '교환/반품'
+		
+	</select>
+	
+		<select id="getOrderCount" resultType="int">
+		select count(*) from SERVICE_FAQ where
+		
+		<include refid="PagingVO"></include>
+		
+		FAQ_NUM > 0 and  faq_category = '주문/조회'
+		
+	</select>
+	
+	<select id="getQuestionCount" resultType="int">
+		select count(*) from SERVICE_FAQ where
+		
+		<include refid="PagingVO"></include>
+		
+		FAQ_NUM > 0 and  faq_category = '상품문의'
+		
+	</select>
+	
+</mapper>
+	

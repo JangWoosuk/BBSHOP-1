@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace ="com.bbshop.bit.mapper.MemberMapper">
+
+	<resultMap type="com.bbshop.bit.domain.MemberVO" id="MemberResultMap">
+		<result property ="USER_KEY" column ="USER_KEY"/>
+		<result property ="MEMBER_ID" column ="MEMBER_ID"/>
+		<result property ="NICKNAME" column ="NICKNAME"/>
+		<result property ="MEMBER_PW" column ="MEMBER_PW"/>
+		<result property ="NAME" column ="NAME"/>
+		<result property ="BIRTH" column ="BIRTH"/>
+		<result property ="PHONE" column ="PHONE"/>
+		<result property ="GRADE" column ="GRADE"/>
+		<result property ="SAVINGS" column ="SAVINGS"/>
+		<result property ="CAUTION" column ="CAUTION"/>
+		<result property ="REGDATE" column ="REGDATE"/>
+		<result property ="MODDATE" column ="MODDATE"/>
+		<result property ="FLAG" column ="FLAG"/>
+	</resultMap>
+
+<select id="memberLogin" parameterType="HashMap" resultType="int">
+
+	select count(*)
+	from sh_user
+	where MEMBER_ID=#{MEMBER_ID} and MEMBER_PW =#{MEMBER_PW}
+
+
+</select>
+
+<insert id="moreDetailsRegister" parameterType="com.bbshop.bit.domain.MoreDetailsVO">
+	
+		INSERT INTO U_MOREDETAIL (user_key,team,position,brand1,brand2,brand3)
+		VALUES(#{USER_KEY}, #{TEAM},#{POSITION},#{BRAND1},#{BRAND2},#{BRAND3})
+
+</insert>
+
+<insert id="insertMember" parameterType="com.bbshop.bit.domain.MemberVO">
+	<selectKey keyProperty="USER_KEY" resultType="int" order="BEFORE">
+		select user_seq.nextval FROM DUAL
+	</selectKey>
+		
+		INSERT INTO sh_user (user_key,member_id, member_pw, name, birth,phone,
+		nickname,REGDATE,flag,grade,savings,caution,MODDATE)
+		VALUES
+		(#{USER_KEY},#{MEMBER_ID}, #{MEMBER_PW}, #{NAME}, #{BIRTH} , #{PHONE} ,
+		#{NICKNAME},sysdate,#{FLAG},#{GRADE},#{SAVINGS},#{CAUTION},sysdate)
+	</insert>
+
+<select id="memberPw" parameterType="com.bbshop.bit.domain.MemberVO" resultType="String">
+	select member_pw from sh_user where member_id=#{MEMBER_ID}
+</select>
+
+<select id="getUser_key" parameterType="com.bbshop.bit.domain.MemberVO" resultType="long">
+	select user_key from sh_user where member_id=#{MEMBER_ID}
+</select>
+
+<select id="getId" parameterType="com.bbshop.bit.domain.MemberVO" resultType="int">
+	select count(*) from sh_user where member_id=#{MEMBER_ID}
+</select>
+
+<select id="getNickname" parameterType="com.bbshop.bit.domain.MemberVO" resultType="int">
+	select count(*) from sh_user where nickname=#{NICKNAME}
+</select>
+
+<select id="getMemberInfo" resultType="com.bbshop.bit.domain.MemberVO">
+	select *
+	from sh_user
+	where user_key = #{user_key}
+</select>
+</mapper>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	 
+<mapper namespace="com.bbshop.bit.mapper.ReplyMapper">
+
+	<insert id="insertReply" parameterType="com.bbshop.bit.domain.ReplyVO">
+		<selectKey keyProperty="seq_reply" resultType="int" order="BEFORE">
+			SELECT seq_reply.nextval FROM DUAL
+		</selectKey>
+		INSERT INTO cm_comment(reply_num, reply_content, board_num, writer, user_key) 
+		VALUES(seq_reply.nextval, #{reply_content, jdbcType=VARCHAR}, #{board_num, jdbcType=NUMERIC}, #{writer ,jdbcType=VARCHAR}, 1)
+	</insert>
+	
+	<select id="readReply" parameterType="long" resultType="com.bbshop.bit.domain.ReplyVO">
+		SELECT *
+		FROM cm_comment
+		WHERE reply_num = #{reply_num, jdbcType=NUMERIC}
+	</select>
+	
+	<delete id="deleteReply" parameterType="long">
+		DELETE
+		FROM cm_comment
+		WHERE reply_num = #{reply_num, jdbcType=NUMERIC}
+	</delete>
+	
+	<update id="updateReply" parameterType="com.bbshop.bit.domain.ReplyVO">
+		UPDATE cm_comment
+		SET reply_content = #{reply_content, jdbcType=VARCHAR}, moddate = sysdate
+		WHERE reply_num = #{reply_num, jdbcType=NUMERIC}
+	</update>
+	
+	<select id="getListWithPaging" resultType="com.bbshop.bit.domain.ReplyVO">
+		
+		<![CDATA[
+		SELECT reply_num, board_num, reply_content, writer, regdate, moddate
+		FROM 
+			(
+			SELECT /*+INDEX(cm_comment idx_reply) */
+				rownum rn, reply_num, board_num, reply_content, writer, regdate, moddate
+				FROM cm_comment
+				WHERE board_num = #{BOARD_NUM}
+				AND reply_num > 0
+				AND rownum <= #{pagingvo.pageNum} * #{pagingvo.amount}
+			) WHERE rn > (#{pagingvo.pageNum} -1 ) * #{pagingvo.amount}
+		]]>
+		
+	</select>
+	
+	<select id="getCountByBno" resultType="int">
+	<![CDATA[
+	SELECT count(reply_num) from cm_comment WHERE board_num = #{board_num}
+	]]>
+	</select>
+	
+</mapper>
